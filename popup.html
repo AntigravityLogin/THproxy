@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>FanProxy</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0d0f1a;
+      --surface: #161925;
+      --surface2: #1e2235;
+      --border: rgba(255, 255, 255, 0.07);
+      --accent: #6c63ff;
+      --accent2: #4facfe;
+      --text: #e8eaf0;
+      --muted: #6b7094;
+      --success: #34d399;
+      --danger: #f87171;
+      --r: 12px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      width: 340px;
+      padding: 16px;
+      min-height: 160px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .header-logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Input ── */
+    input[type="text"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-family: 'Inter', monospace;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 10px;
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--muted);
+    }
+
+    input[type="text"]:focus {
+      border-color: rgba(108, 99, 255, 0.5);
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 9px 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    #connectBtn {
+      background: linear-gradient(135deg, #6c63ff, #4facfe);
+      color: #fff;
+    }
+
+    #connectBtn:hover {
+      opacity: 0.9;
+    }
+
+    #connectBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #disconnectBtn {
+      background: rgba(248, 113, 113, 0.12);
+      color: var(--danger);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+    }
+
+    #disconnectBtn:hover {
+      background: rgba(248, 113, 113, 0.2);
+    }
+
+    /* ── Error ── */
+    .error {
+      display: none;
+      font-size: 11px;
+      color: var(--danger);
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.15);
+      border-radius: 8px;
+      padding: 7px 10px;
+      margin-bottom: 10px;
+    }
+
+    /* ── Status pill ── */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    .dot.active {
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+
+    .dot.inactive {
+      background: var(--danger);
+    }
+
+    /* ── IP Info Panel ── */
+    #info-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      margin-top: 4px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .ip-big {
+      text-align: center;
+      padding: 14px 16px 10px;
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.08), rgba(79, 172, 254, 0.06));
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ip-big .label {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 4px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .ip-big .value {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .ip-big .value.loading {
+      opacity: 0.3;
+      font-size: 18px;
+    }
+
+    .geo-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      padding: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .geo-item {
+      flex: 1;
+      min-width: 50%;
+      padding: 8px 12px;
+      border-right: 1px solid var(--border);
+    }
+
+    .geo-item:nth-child(2n) {
+      border-right: none;
+    }
+
+    .geo-item:nth-last-child(-n+2) {
+      border-bottom: none;
+    }
+
+    .geo-item .g-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .geo-item .g-val {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .geo-item .g-val.empty {
+      color: var(--muted);
+    }
+
+    .ping-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 8px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .ping-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: var(--muted);
+    }
+
+    .ping-chip::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .ping-chip.ok {
+      color: var(--success);
+      border-color: rgba(52, 211, 153, 0.2);
+      background: rgba(52, 211, 153, 0.05);
+    }
+
+    .ping-chip.ok::before {
+      background: var(--success);
+    }
+
+    .ping-chip.fail {
+      color: var(--danger);
+      border-color: rgba(248, 113, 113, 0.2);
+      background: rgba(248, 113, 113, 0.05);
+    }
+
+    .ping-chip.fail::before {
+      background: var(--danger);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <div class="header-logo">🛡</div>
+    <h1>FanProxy</h1>
+  </div>
+
+  <input type="text" id="proxyString" placeholder="ip:port  /  ip:port:user:pass  /  http://user:pass@ip:port">
+
+  <div class="btn-row">
+    <button id="connectBtn">Подключить</button>
+    <button id="disconnectBtn">Отключить</button>
+  </div>
+
+  <div id="error" class="error"></div>
+
+  <div class="status-pill">
+    <span class="dot" id="statusDot"></span>
+    <span id="statusText">Отключён</span>
+  </div>
+
+  <!-- IP Info Panel -->
+  <div id="info-panel">
+    <div class="ip-big">
+      <div class="label">Ваш IP</div>
+      <div class="value loading" id="ip-val">···</div>
+    </div>
+    <div class="geo-row">
+      <div class="geo-item">
+        <div class="g-label">Страна</div>
+        <div class="g-val empty" id="g-country">—</div>
+      </div>
+      <div class="geo-item">
+        <div class="g-label">Город</div>
+        <div class="g-val empty" id="g-city">—</div>
+      </div>
+      <div class="geo-item">
+        <div class="g-label">Регион</div>
+        <div class="g-val empty" id="g-region">—</div>
+      </div>
+      <div class="geo-item">
+        <div class="g-label">Часовой пояс</div>
+        <div class="g-val empty" id="g-tz">—</div>
+      </div>
+    </div>
+    <div class="ping-row">
+      <span class="ping-chip" id="p0">Google</span>
+      <span class="ping-chip" id="p1">Amazon</span>
+      <span class="ping-chip" id="p2">Yandex</span>
+      <span class="ping-chip" id="p3">TikTok</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>

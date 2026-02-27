@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>IP Info</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #22263a;
+            --border: rgba(255, 255, 255, 0.07);
+            --accent: #6c63ff;
+            --accent2: #4facfe;
+            --text-primary: #e8eaf0;
+            --text-secondary: #8b90a7;
+            --success: #34d399;
+            --danger: #f87171;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px 16px 40px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* ─── IP Header ─── */
+        .ip-card {
+            background: linear-gradient(135deg, #1e2140 0%, #16192e 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .ip-header {
+            padding: 40px 32px 28px;
+            text-align: center;
+            position: relative;
+            background: radial-gradient(ellipse at 50% 0%, rgba(108, 99, 255, 0.15) 0%, transparent 70%);
+        }
+
+        .ip-address {
+            font-size: clamp(36px, 8vw, 60px);
+            font-weight: 700;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--accent2) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+
+        .ip-address.loading {
+            opacity: 0.4;
+            font-size: 40px;
+        }
+
+        /* ─── Ping bar ─── */
+        .ping-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 24px 20px;
+            border-top: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .ping-bar a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .ping-bar a::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: background 0.3s ease;
+            animation: pulse-idle 2s infinite;
+        }
+
+        .ping-bar a.success {
+            color: var(--success);
+            border-color: rgba(52, 211, 153, 0.25);
+            background: rgba(52, 211, 153, 0.06);
+        }
+
+        .ping-bar a.success::before {
+            background: var(--success);
+            animation: pulse-ok 1.5s infinite;
+        }
+
+        .ping-bar a.fail {
+            color: var(--danger);
+            border-color: rgba(248, 113, 113, 0.2);
+            background: rgba(248, 113, 113, 0.05);
+        }
+
+        .ping-bar a.fail::before {
+            background: var(--danger);
+            animation: none;
+        }
+
+        @keyframes pulse-ok {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 0 4px rgba(52, 211, 153, 0);
+            }
+        }
+
+        @keyframes pulse-idle {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        /* ─── Geo strip ─── */
+        .geo-strip {
+            padding: 14px 24px;
+            background: rgba(0, 0, 0, 0.25);
+            border-top: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .geo-strip .geo-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .geo-strip .geo-label {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .geo-strip .geo-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* ─── Info card ─── */
+        .info-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-card-header {
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+            gap: 16px;
+            transition: background 0.15s ease;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .info-label {
+            width: 130px;
+            flex-shrink: 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding-top: 2px;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: var(--text-primary);
+            word-break: break-word;
+            line-height: 1.5;
+        }
+
+        /* ─── Toast ─── */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            min-width: 200px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--success);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.25s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 480px) {
+            .info-label {
+                width: 100px;
+                font-size: 11px;
+            }
+
+            .info-value {
+                font-size: 13px;
+            }
+
+            .ip-header {
+                padding: 28px 16px 20px;
+            }
+
+            .ping-bar {
+                padding: 12px 12px 16px;
+            }
+
+            .geo-strip {
+                padding: 12px 16px;
+            }
+
+            .info-row {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- IP Card -->
+        <div class="ip-card">
+            <div class="ip-header">
+                <div class="ip-address loading" id="ip-ip">···</div>
+            </div>
+
+            <div class="ping-bar">
+                <a href="https://www.google.com/" target="_blank" rel="noopener noreferrer" id="ping_0">Google</a>
+                <a href="https://www.wikipedia.org/" target="_blank" rel="noopener noreferrer" id="ping_1">Wikipedia</a>
+                <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" id="ping_2">Facebook</a>
+                <a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer" id="ping_3">TikTok</a>
+                <a href="https://www.amazon.com/" target="_blank" rel="noopener noreferrer" id="ping_4">Amazon</a>
+                <a href="https://whoer.net/" target="_blank" rel="noopener noreferrer" id="ping_5">Whoer</a>
+            </div>
+
+            <div class="geo-strip">
+                <span class="geo-item">
+                    <span class="geo-label">IP-API:</span>
+                    <span class="geo-value" id="country">—</span>
+                </span>
+                <span class="geo-label">/</span>
+                <span class="geo-item">
+                    <span class="geo-value" id="region">—</span>
+                </span>
+                <span class="geo-label">/</span>
+                <span class="geo-item">
+                    <span class="geo-value" id="city">—</span>
+                </span>
+                <span class="geo-label">/</span>
+                <span class="geo-item">
+                    <span class="geo-value" id="timezone">—</span>
+                </span>
+                <span class="geo-item" style="margin-left:8px;">
+                    <span class="geo-label">Lat/Lon:</span>
+                    <span class="geo-value" id="lat">—</span>
+                    <span class="geo-label">/</span>
+                    <span class="geo-value" id="lon">—</span>
+                </span>
+                <span class="geo-item">
+                    <span class="geo-label">ZIP:</span>
+                    <span class="geo-value" id="zip">—</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="info-card">
+            <div class="info-card-header">Session Info</div>
+            <div class="info-row">
+                <div class="info-label">Startup Time</div>
+                <div class="info-value" id="val-startup">—</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Language</div>
+                <div class="info-value" id="val-language">—</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">User Agent</div>
+                <div class="info-value" id="val-useragent">—</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Timezone</div>
+                <div class="info-value" id="val-timezone">—</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // Session info — dynamically detected
+        (function () {
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            document.getElementById('val-startup').textContent = dateStr;
+            document.getElementById('val-language').textContent = navigator.languages
+                ? navigator.languages.map((l, i) => i === 0 ? l : `${l};q=${(1 - i * 0.1).toFixed(1)}`).join(',')
+                : navigator.language || '—';
+            document.getElementById('val-useragent').textContent = navigator.userAgent || '—';
+            document.getElementById('val-timezone').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || '—';
+        })();
+
+        // IP check
+        function checkIP() {
+            const xhr = new XMLHttpRequest();
+            xhr.timeout = 10000;
+            xhr.open('GET', 'http://www.ixbrowser.com/api/ip-api');
+            xhr.send();
+            xhr.onload = function () {
+                const el = document.getElementById('ip-ip');
+                el.classList.remove('loading');
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.response);
+                    el.textContent = data.query || '—';
+                    document.getElementById('country').textContent = data.country || '—';
+                    document.getElementById('region').textContent = data.regionName || '—';
+                    document.getElementById('city').textContent = data.city || '—';
+                    document.getElementById('timezone').textContent = data.timezone || '—';
+                    document.getElementById('lat').textContent = data.lat || '—';
+                    document.getElementById('lon').textContent = data.lon || '—';
+                    document.getElementById('zip').textContent = data.zip || '—';
+                } else {
+                    el.textContent = 'Error';
+                }
+            };
+            xhr.onerror = function () {
+                const el = document.getElementById('ip-ip');
+                el.classList.remove('loading');
+                el.textContent = 'Error';
+            };
+        }
+        checkIP();
+
+        // Site ping check
+        function checkSites() {
+            const sites = [
+                { id: 'ping_0', url: 'https://www.google.com/favicon.ico' },
+                { id: 'ping_1', url: 'https://en.wikipedia.org/favicon.ico' },
+                { id: 'ping_2', url: 'https://www.facebook.com/favicon.ico' },
+                { id: 'ping_3', url: 'https://www.tiktok.com/favicon.ico' },
+                { id: 'ping_4', url: 'https://www.amazon.com/favicon.ico' },
+                { id: 'ping_5', url: 'https://whoer.net/favicon.ico' },
+            ];
+            const ts = Date.now();
+            sites.forEach(({ id, url }) => {
+                const img = new Image();
+                img.referrerPolicy = 'no-referrer';
+                img.onload = () => { document.getElementById(id).className = 'success'; };
+                img.onerror = () => { document.getElementById(id).className = 'fail'; };
+                img.src = url + '?v=' + ts;
+            });
+        }
+        checkSites();
+
+        // Toast notification
+        function showToast(message, duration = 2500) {
+            let container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => toast.classList.add('show'));
+            });
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        async function copyText(text) {
+            await navigator.clipboard.writeText(text);
+            showToast('Copied to clipboard');
+        }
+    </script>
+</body>
+
+</html>
